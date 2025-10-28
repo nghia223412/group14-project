@@ -1,17 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import UserList from "./components/UserList";
-import AddUser from "./components/AddUser";
 
 function App() {
-  const [refresh, setRefresh] = useState(false);
-
-  const handleUserAdded = () => setRefresh(!refresh);
-
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
       <h1>Quản lý người dùng - Frontend</h1>
-      <AddUser onUserAdded={handleUserAdded} />
-      <UserList key={refresh} />
+      <UserList />
     </div>
   );
 }

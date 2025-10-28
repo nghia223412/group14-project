@@ -40,3 +40,4 @@ const AddUser = ({ onUserAdded }) => {
 };
 
 export default AddUser;
+export const getUsers = () => axiosInstance.get("/api/users");

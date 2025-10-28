@@ -9,8 +9,26 @@ const axiosInstance = axios.create({
   headers: { "ngrok-skip-browser-warning": "true" }
 });
 
-// GET danh sách người dùng
-export const getUsers = () => axiosInstance.get("/api/users");
+// GET danh sách người dùng (trả về data trực tiếp)
+export const getUsers = async () => {
+  const res = await axiosInstance.get("/api/users");
+  return res.data;
+};
 
 // POST thêm người dùng mới
-export const createUser = (user) => axiosInstance.post("/api/users", user);
+export const createUser = async (user) => {
+  const res = await axiosInstance.post("/api/users", user);
+  return res.data;
+};
+
+// PUT cập nhật người dùng
+export const updateUser = async (id, user) => {
+  const res = await axiosInstance.put(`/api/users/${id}`, user);
+  return res.data;
+};
+
+// DELETE người dùng
+export const deleteUser = async (id) => {
+  const res = await axiosInstance.delete(`/api/users/${id}`);
+  return res.data;
+};
