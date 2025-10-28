@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { getUsers, createUser, updateUser, deleteUser } from "../api/usersApi";
 
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
+const validateName = (name) => {
+  return name.trim().length >= 2;
+};
+
 const UserList = () => {
   const [users, setUsers] = useState([]); 
   const [error, setError] = useState(null);
@@ -8,6 +17,28 @@ const UserList = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [validation, setValidation] = useState({
+    name: { valid: true, message: "" },
+    email: { valid: true, message: "" }
+  });
+
+  const validateForm = () => {
+    const nameValid = validateName(name);
+    const emailValid = validateEmail(email);
+
+    setValidation({
+      name: {
+        valid: nameValid,
+        message: nameValid ? "" : "Tên phải có ít nhất 2 ký tự"
+      },
+      email: {
+        valid: emailValid,
+        message: emailValid ? "" : "Email không đúng định dạng"
+      }
+    });
+
+    return nameValid && emailValid;
+  };
 
   const fetchUsers = async () => {
     try {
@@ -26,12 +57,18 @@ const UserList = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setIsSubmitting(true);
     try {
       await createUser({ name, email });
       setName("");
       setEmail("");
       await fetchUsers();
+      setValidation({
+        name: { valid: true, message: "" },
+        email: { valid: true, message: "" }
+      });
     } catch (err) {
       console.error("Lỗi tạo user:", err);
       setError(err.message);
@@ -44,10 +81,16 @@ const UserList = () => {
     setEditingId(user._id);
     setName(user.name);
     setEmail(user.email);
+    setValidation({
+      name: { valid: true, message: "" },
+      email: { valid: true, message: "" }
+    });
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setIsSubmitting(true);
     try {
       await updateUser(editingId, { name, email });
@@ -55,6 +98,10 @@ const UserList = () => {
       setName("");
       setEmail("");
       await fetchUsers();
+      setValidation({
+        name: { valid: true, message: "" },
+        email: { valid: true, message: "" }
+      });
     } catch (err) {
       console.error("Lỗi cập nhật:", err);
       setError("Lỗi khi cập nhật: " + err.message);
@@ -80,25 +127,55 @@ const UserList = () => {
       <h2>{editingId ? "Cập nhật người dùng" : "Thêm người dùng mới"}</h2>
       <form onSubmit={editingId ? handleUpdate : handleSubmit} style={{ marginBottom: "20px" }}>
         <div style={{ marginBottom: "10px" }}>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Tên người dùng"
-            required
-            style={{ marginRight: "10px", padding: "5px" }}
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            style={{ marginRight: "10px", padding: "5px" }}
-          />
+          <div style={{ marginBottom: "10px" }}>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (!validation.name.valid) validateForm();
+              }}
+              placeholder="Tên người dùng"
+              required
+              style={{
+                marginRight: "10px",
+                padding: "5px",
+                borderColor: validation.name.valid ? '#ddd' : 'red'
+              }}
+            />
+            {!validation.name.valid && (
+              <div style={{ color: "red", fontSize: "12px" }}>
+                {validation.name.message}
+              </div>
+            )}
+          </div>
+          
+          <div style={{ marginBottom: "10px" }}>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (!validation.email.valid) validateForm();
+              }}
+              placeholder="Email"
+              required
+              style={{
+                marginRight: "10px",
+                padding: "5px",
+                borderColor: validation.email.valid ? '#ddd' : 'red'
+              }}
+            />
+            {!validation.email.valid && (
+              <div style={{ color: "red", fontSize: "12px" }}>
+                {validation.email.message}
+              </div>
+            )}
+          </div>
+
           <button 
             type="submit" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || !validation.name.valid || !validation.email.valid}
             style={{ padding: "5px 10px" }}
           >
             {isSubmitting ? "Đang xử lý..." : (editingId ? "Cập nhật" : "Thêm người dùng")}
@@ -110,6 +187,10 @@ const UserList = () => {
                 setEditingId(null);
                 setName("");
                 setEmail("");
+                setValidation({
+                  name: { valid: true, message: "" },
+                  email: { valid: true, message: "" }
+                });
               }}
               style={{ marginLeft: "10px", padding: "5px 10px" }}
             >
