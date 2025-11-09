@@ -9,7 +9,7 @@ function AddUser({ onUserAdded }) {
     e.preventDefault();
     try {
       const newUser = { name, email };
-      await axios.post('http://localhost:3000/api/users', newUser);
+      await axios.post('https://group14-project-a92d.onrender.com/api/users', newUser);
       setName('');
       setEmail('');
       onUserAdded(); // Refresh danh sách
