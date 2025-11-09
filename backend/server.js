@@ -19,7 +19,8 @@ const allowedOrigins = [
     'http://localhost:3000',
     'https://group14-project-virid.vercel.app',  // Giữ lại nếu cần
     'https://group14-project-virid2.vercel.app', // Giữ lại nếu cần
-    'https://group14-project-vdi2.vercel.app'
+    'https://group14-project-vdi2.vercel.app',
+    'https://group14-project-vdi2-f3hoo3j7g-nghias-projects-9d6cd8f7.vercel.app'
 ];
 
 const corsOptions = {
