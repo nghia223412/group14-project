@@ -10,7 +10,7 @@ function UserList() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/users');
+      const response = await axios.get('https://group14-project-a92d.onrender.com/api/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
