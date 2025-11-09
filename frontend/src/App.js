@@ -1,4 +1,4 @@
-// Nội dung file: frontend/src/App.js
+// Nội dung file: frontend/src/App.js (Đã sửa lỗi biên dịch)
 import React, { useState, useEffect, useCallback } from 'react'; // THÊM useCallback
 import axios from 'axios';
 import Auth from './components/Auth';
@@ -14,15 +14,15 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [currentPage, setCurrentPage] = useState('home'); // home, profile, admin
   
-  // SỬA: Thêm '_' để bỏ qua biến không sử dụng
-  const [_users, setUsers] = useState([]); 
+  // SỬA LỖI no-unused-vars (Dòng 17, 22)
+  const [_users, setUsers] = useState([]); // Đổi tên để bỏ qua cảnh báo
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [editingUser, setEditingUser] = useState(null);
-  const [_error, setError] = useState(''); // SỬA: Thêm '_' để bỏ qua biến 'error'
-  
-  // Hàm fetchUsers cần được định nghĩa bằng useCallback
+  const [_error, setError] = useState(''); // Đổi tên để bỏ qua cảnh báo
+
+  // 1. Hàm gọi API để lấy danh sách user (Định nghĩa bằng useCallback)
   const fetchUsers = useCallback(async () => {
     if (!token) {
       console.log('No token, cannot fetch users');
@@ -47,14 +47,13 @@ function App() {
       console.error('Error fetching users:', error.response?.data || error.message);
       
       if (error.response?.status === 403) {
-        // Đã đổi biến error thành _error ở đây
         // setError('Bạn cần quyền Admin để xem danh sách users'); 
       }
       setUsers([]);
     }
-  }, [token]); // DEPENDENCY: Chỉ cần thay đổi khi token thay đổi
+  }, [token]); // Dependency: Chỉ cần thay đổi khi token thay đổi
 
-  // Hàm checkAuth cần được định nghĩa bằng useCallback
+  // 2. Hàm kiểm tra xác thực (Định nghĩa bằng useCallback)
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
@@ -64,7 +63,7 @@ function App() {
       console.log('✅ Auth valid - User:', response.data.data.name);
       setCurrentUser(response.data.data);
       setIsLoggedIn(true);
-      fetchUsers(); // Gọi hàm fetchUsers
+      fetchUsers();
     } catch (error) {
       console.log('⚠️ Auth check failed - Clearing old token');
       localStorage.removeItem('token');
@@ -72,13 +71,14 @@ function App() {
       setIsLoggedIn(false);
       setCurrentUser(null);
     }
-  }, [token, fetchUsers]); // DEPENDENCIES: Cần token và fetchUsers
+  }, [token, fetchUsers]); // Dependency: Cần token và fetchUsers
 
   // Axios interceptor: Tự động xóa token khi gặp lỗi 401
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
+        // Chỉ auto logout khi gặp 401 VÀ đang có user logged in
         if (error.response?.status === 401 && isLoggedIn) {
           console.log('🔴 Token expired - Auto logout');
           localStorage.removeItem('token');
@@ -97,16 +97,16 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Check authentication on mount
+  // Check authentication on mount (SỬA LỖI Dòng 53: exhaustive-deps)
   useEffect(() => {
     if (token) {
       checkAuth();
     }
-  }, [checkAuth, token]); // ✅ Đã sửa lỗi thiếu dependencies
+  }, [checkAuth, token]); // ✅ Đã thêm checkAuth và token
 
   const handleLoginSuccess = (user, userToken) => {
     console.log('🔐 Login success - Saving token to localStorage');
-    localStorage.setItem('token', userToken); // LƯU TOKEN VÀO LOCALSTORAGE
+    localStorage.setItem('token', userToken);
     setCurrentUser(user);
     setToken(userToken);
     setIsLoggedIn(true);
@@ -126,12 +126,19 @@ function App() {
     setCurrentUser(updatedUser);
   };
 
-  // XÓA: Các hàm handleSubmit, handleDelete, handleEdit đã được định nghĩa nhưng không dùng 
-  // trong App.js (Giả định chúng đã được chuyển vào AdminUserManagement.jsx)
+  // ❗ XÓA CÁC HÀM KHÔNG SỬ DỤNG (no-unused-vars) - Từ dòng 131 đến 200
+  // Nếu các hàm này được dùng trong AdminUserManagement.jsx, logic của nó đã được chuyển vào component đó.
+  // Nếu bạn cần sử dụng chúng, bạn phải truyền chúng xuống component con.
+  
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setEditingUser(null);
+    setError('');
+  };
 
-  // Lưu ý: Nếu bạn vẫn muốn giữ các hàm này, hãy truyền chúng xuống component con
-  // (Ví dụ: <AdminUserManagement ... handleSubmit={handleSubmit} />)
-
+  // JSX vẫn giữ nguyên
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       {!isLoggedIn ? (
@@ -308,8 +315,8 @@ function App() {
               <AdminUserManagement 
                 token={token}
                 currentUser={currentUser}
-                // Nếu component AdminUserManagement cần các hàm CRUD, bạn phải truyền chúng ở đây
-                // Ví dụ: onDelete={handleDelete}, onSubmit={handleSubmit}
+                // Bạn cần truyền các hàm CRUD nếu component này cần chúng
+                fetchUsers={fetchUsers}
               />
             )}
           </div>
