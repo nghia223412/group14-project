@@ -38,7 +38,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/groupD
 // ... (Logic kết nối MongoDB)
 
 // Import routes
-const userRoutes = require('./routes/user');
+//const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 
 // Temporary admin setup route (chỉ dùng lần đầu)
