@@ -19,7 +19,7 @@ const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 
 // Temporary admin setup route (chỉ dùng lần đầu)
-const User = require('./models/User.js');
+const User = require('./models/user.js');
 app.post('/api/setup-admin', async (req, res) => {
   try {
     const { email, password, name } = req.body;
