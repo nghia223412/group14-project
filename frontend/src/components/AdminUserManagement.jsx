@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // THÊM useCallback
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
@@ -11,13 +11,16 @@ function AdminUserManagement({ token, currentUser }) {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  const fetchUsers = async () => {
+  // SỬA LỖI 1: Bọc fetchUsers trong useCallback và đặt nó TRƯỚC useEffect
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError('');
+    
+    // Nếu không có token, không thực hiện fetch
+    if (!token) { 
+        setLoading(false);
+        return;
+    }
     
     try {
       const response = await axios.get(`${API_URL}/users`, {
@@ -32,7 +35,12 @@ function AdminUserManagement({ token, currentUser }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]); // Dependency: Chỉ cần thay đổi khi token thay đổi
+
+  // SỬA LỖI 2: Thêm fetchUsers vào dependency array
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]); // ✅ Đã sửa lỗi missing dependency và infinite loop
 
   const handleUpdateRole = async (userId, newRole) => {
     setError('');
