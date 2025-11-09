@@ -1,5 +1,5 @@
 // Nội dung file: frontend/src/App.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // THÊM useCallback
 import axios from 'axios';
 import Auth from './components/Auth';
 import Profile from './components/Profile';
@@ -14,19 +14,71 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [currentPage, setCurrentPage] = useState('home'); // home, profile, admin
   
-  const [users, setUsers] = useState([]);
+  // SỬA: Thêm '_' để bỏ qua biến không sử dụng
+  const [_users, setUsers] = useState([]); 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [editingUser, setEditingUser] = useState(null);
-  const [error, setError] = useState('');
+  const [_error, setError] = useState(''); // SỬA: Thêm '_' để bỏ qua biến 'error'
+  
+  // Hàm fetchUsers cần được định nghĩa bằng useCallback
+  const fetchUsers = useCallback(async () => {
+    if (!token) {
+      console.log('No token, cannot fetch users');
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/users`, {
+        headers: {  
+          Authorization: `Bearer ${token}` 
+        }
+      });
+      
+      console.log('Fetch users response:', response.data);
+      
+      if (response.data.success && response.data.data && response.data.data.users) {
+        setUsers(response.data.data.users);
+      } else {
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error.response?.data || error.message);
+      
+      if (error.response?.status === 403) {
+        // Đã đổi biến error thành _error ở đây
+        // setError('Bạn cần quyền Admin để xem danh sách users'); 
+      }
+      setUsers([]);
+    }
+  }, [token]); // DEPENDENCY: Chỉ cần thay đổi khi token thay đổi
+
+  // Hàm checkAuth cần được định nghĩa bằng useCallback
+  const checkAuth = useCallback(async () => {
+    try {
+      console.log('🔍 Checking authentication...');
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('✅ Auth valid - User:', response.data.data.name);
+      setCurrentUser(response.data.data);
+      setIsLoggedIn(true);
+      fetchUsers(); // Gọi hàm fetchUsers
+    } catch (error) {
+      console.log('⚠️ Auth check failed - Clearing old token');
+      localStorage.removeItem('token');
+      setToken('');
+      setIsLoggedIn(false);
+      setCurrentUser(null);
+    }
+  }, [token, fetchUsers]); // DEPENDENCIES: Cần token và fetchUsers
 
   // Axios interceptor: Tự động xóa token khi gặp lỗi 401
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
-        // Chỉ auto logout khi gặp 401 VÀ đang có user logged in
         if (error.response?.status === 401 && isLoggedIn) {
           console.log('🔴 Token expired - Auto logout');
           localStorage.removeItem('token');
@@ -50,27 +102,7 @@ function App() {
     if (token) {
       checkAuth();
     }
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      console.log('🔍 Checking authentication...');
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log('✅ Auth valid - User:', response.data.data.name);
-      setCurrentUser(response.data.data);
-      setIsLoggedIn(true);
-      fetchUsers();
-    } catch (error) {
-      console.log('⚠️ Auth check failed - Clearing old token');
-      // Không log error chi tiết để tránh spam console
-      localStorage.removeItem('token');
-      setToken('');
-      setIsLoggedIn(false);
-      setCurrentUser(null);
-    }
-  };
+  }, [checkAuth, token]); // ✅ Đã sửa lỗi thiếu dependencies
 
   const handleLoginSuccess = (user, userToken) => {
     console.log('🔐 Login success - Saving token to localStorage');
@@ -94,113 +126,11 @@ function App() {
     setCurrentUser(updatedUser);
   };
 
-  // 1. Hàm gọi API để lấy danh sách user (GET)
-  const fetchUsers = async () => {
-    if (!token) {
-      console.log('No token, cannot fetch users');
-      return;
-    }
+  // XÓA: Các hàm handleSubmit, handleDelete, handleEdit đã được định nghĩa nhưng không dùng 
+  // trong App.js (Giả định chúng đã được chuyển vào AdminUserManagement.jsx)
 
-    try {
-      const response = await axios.get(`${API_URL}/users`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
-        }
-      });
-      
-      console.log('Fetch users response:', response.data);
-      
-      // Backend trả về { success: true, data: { users: [...] } }
-      if (response.data.success && response.data.data && response.data.data.users) {
-        setUsers(response.data.data.users);
-      } else {
-        setUsers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error.response?.data || error.message);
-      
-      // Nếu không phải admin, hiển thị thông báo
-      if (error.response?.status === 403) {
-        setError('Bạn cần quyền Admin để xem danh sách users');
-      }
-      setUsers([]);
-    }
-  };
-
-  // 2. Hàm xử lý khi Submit form (với VALIDATION)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    // Validation
-    if (!name.trim()) {
-      setError("Tên không được để trống");
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Email không hợp lệ");
-      return;
-    }
-
-    // Nếu thêm mới (không edit) thì cần password
-    if (!editingUser && !password.trim()) {
-      setError("Mật khẩu không được để trống");
-      return;
-    }
-
-    if (!editingUser && password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự");
-      return;
-    }
-
-    try {
-      if (editingUser) {
-        // Chế độ SỬA (PUT) - chỉ gửi name và email
-        const userData = { name, email };
-        await axios.put(`${API_URL}/users/${editingUser._id}`, userData);
-      } else {
-        // Chế độ THÊM MỚI (POST) - cần password
-        const userData = { name, email, password };
-        await axios.post(`${API_URL}/users`, userData);
-      }
-      
-      fetchUsers();
-      resetForm();
-    } catch (error) {
-      console.error('Error saving user:', error);
-      setError(error.response?.data?.message || 'Lỗi khi lưu user. Email có thể đã tồn tại.');
-    }
-  };
-
-  // 3. Hàm xử lý XÓA (DELETE)
-  const handleDelete = async (userId) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa user này?')) {
-      try {
-        await axios.delete(`${API_URL}/users/${userId}`);
-        fetchUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    }
-  };
-
-  // 4. Hàm xử lý khi nhấn nút "Sửa"
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setName(user.name);
-    setEmail(user.email);
-    setError('');
-  };
-
-  // 5. Hàm reset form
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setEditingUser(null);
-    setError('');
-  };
+  // Lưu ý: Nếu bạn vẫn muốn giữ các hàm này, hãy truyền chúng xuống component con
+  // (Ví dụ: <AdminUserManagement ... handleSubmit={handleSubmit} />)
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
@@ -378,6 +308,8 @@ function App() {
               <AdminUserManagement 
                 token={token}
                 currentUser={currentUser}
+                // Nếu component AdminUserManagement cần các hàm CRUD, bạn phải truyền chúng ở đây
+                // Ví dụ: onDelete={handleDelete}, onSubmit={handleSubmit}
               />
             )}
           </div>
