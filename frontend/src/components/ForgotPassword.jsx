@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://group14-project-a92d.onrender.com/api';
 
 function ForgotPassword({ onBack }) {
   const [step, setStep] = useState(1); // 1: nhập email, 2: nhập token + new password
