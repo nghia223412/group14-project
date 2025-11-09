@@ -15,12 +15,12 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home'); // home, profile, admin
   
   // SỬA LỖI no-unused-vars (Dòng 17, 22)
-  const [_users, setUsers] = useState([]); // Đổi tên để bỏ qua cảnh báo
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [editingUser, setEditingUser] = useState(null);
-  const [_error, setError] = useState(''); // Đổi tên để bỏ qua cảnh báo
+  //const [_users, setUsers] = useState([]); // Đổi tên để bỏ qua cảnh báo
+  //const [name, setName] = useState('');
+  //const [email, setEmail] = useState('');
+  //const [password, setPassword] = useState('');
+  //const [editingUser, setEditingUser] = useState(null);
+  //const [_error, setError] = useState(''); // Đổi tên để bỏ qua cảnh báo
 
   // 1. Hàm gọi API để lấy danh sách user (Định nghĩa bằng useCallback)
   const fetchUsers = useCallback(async () => {
@@ -130,13 +130,13 @@ function App() {
   // Nếu các hàm này được dùng trong AdminUserManagement.jsx, logic của nó đã được chuyển vào component đó.
   // Nếu bạn cần sử dụng chúng, bạn phải truyền chúng xuống component con.
   
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setEditingUser(null);
-    setError('');
-  };
+  //const resetForm = () => {
+  //  setName('');
+  //  setEmail('');
+  //  setPassword('');
+  //  setEditingUser(null);
+  //  setError('');
+  //};
 
   // JSX vẫn giữ nguyên
   return (
