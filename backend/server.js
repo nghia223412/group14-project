@@ -39,7 +39,12 @@ const corsOptions = {
 };
 
 // Áp dụng CORS middleware
-app.use(cors(corsOptions));
+app.use(cors({
+    origin: 'https://group14-project-virid.vercel.app', // Chỉ cho phép domain frontend
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    optionsSuccessStatus: 204
+}));
 
 
 // =======================================================
