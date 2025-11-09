@@ -71,7 +71,15 @@ function App() {
       checkAuth();
     }
   }, [checkAuth, token]); // ✅ Đã sửa lỗi missing dependencies
-
+useEffect(() => {
+    if (token) {
+        // Thiết lập header mặc định cho tất cả yêu cầu (cho các component con)
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+        // Xóa header khi token không tồn tại (logout)
+        delete axios.defaults.headers.common['Authorization'];
+    }
+}, [token]);
   const handleLoginSuccess = (user, userToken) => {
     console.log('🔐 Login success - Saving token to localStorage');
     localStorage.setItem('token', userToken);
