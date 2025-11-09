@@ -18,7 +18,8 @@ app.use(express.json());
 // Khai báo domain Frontend Vercel của bạn
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://group14-project-virid.vercel.app' // Frontend Production URL
+    'https://group14-project-virid.vercel.app', // Frontend Production URL
+    'https://group14-project-virid2.vercel.app'
 ];
 
 const corsOptions = {
