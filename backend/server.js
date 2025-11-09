@@ -1,34 +1,63 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
 
-// Middleware
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// Kết nối MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log('MongoDB connection error:', err));
+// Kết nối MongoDB (Hoạt động 5)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/groupDB';
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// Test route
-app.get('/', (req, res) => {
-  res.send('Hello Backend!');
+// Import routes
+const userRoutes = require('./routes/user.js');
+const authRoutes = require('./routes/auth.js');
+
+// Temporary admin setup route (chỉ dùng lần đầu)
+const User = require('./models/User.js');
+app.post('/api/setup-admin', async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+    
+    // Kiểm tra email đã tồn tại
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      // Nếu đã tồn tại, update role thành admin
+      existingUser.role = 'admin';
+      await existingUser.save();
+      return res.json({ 
+        success: true, 
+        message: 'User đã tồn tại, đã cập nhật role thành admin',
+        data: { name: existingUser.name, email: existingUser.email, role: existingUser.role }
+      });
+    }
+
+    // Tạo admin mới
+    const admin = await User.create({
+      name: name || 'Admin',
+      email,
+      password,
+      role: 'admin'
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Tạo tài khoản admin thành công',
+      data: { name: admin.name, email: admin.email, role: admin.role }
+    });
+  } catch (error) {
+    console.error('Setup admin error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
-// Routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
+app.use('/api', userRoutes); // Mount user routes tại /api
+app.use('/api/auth', authRoutes); // Mount auth routes tại /api/auth
 
-app.use('/api/auth', authRoutes);   // Authentication routes
-app.use('/api/users', userRoutes);  // User CRUD routes
-
-// Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

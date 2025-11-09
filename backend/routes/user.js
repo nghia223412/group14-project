@@ -1,123 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/userser'); // model Mongoose
+const userController = require('../controllers/userController.js');
+const { protect, authorize } = require('../middleware/auth.js');
 
-// GET tất cả user
-// Lấy danh sách tất cả user (không trả về password)
-router.get('/', async (req, res) => {
-  try {
-    const users = await User.find({}, '-password'); // loại bỏ trường password
-    res.json(users);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
+// ==================== ADMIN ROUTES - Hoạt động 3 ====================
 
-// POST tạo user mới
-// Tạo user mới
-router.post('/', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+// GET /users - Lấy danh sách tất cả user (Admin only)
+router.get('/users', protect, authorize('admin'), userController.getAllUsers);
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Vui lòng điền đầy đủ thông tin' });
-    }
+// GET /users/:id - Lấy thông tin 1 user (Admin only)
+router.get('/users/:id', protect, authorize('admin'), userController.getUserById);
 
-    // Kiểm tra email đã tồn tại
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email đã được đăng ký' });
-    }
+// PUT /users/:id/role - Cập nhật role user (Admin only)
+router.put('/users/:id/role', protect, authorize('admin'), userController.updateUserRole);
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+// DELETE /users/me - Tự xóa tài khoản của mình
+router.delete('/users/me', protect, userController.deleteMe);
 
-    // Tạo user mới
-    const user = new User({ name, email, password: hashedPassword });
-    const newUser = await user.save();
+// DELETE /users/:id - Xóa user (Admin hoặc chính mình)
+router.delete('/users/:id', protect, userController.deleteUser);
 
-    // Trả về thông tin user (không gửi password)
-    const { password: _, ...userWithoutPassword } = newUser.toObject();
-    res.status(201).json(userWithoutPassword);
+// ==================== OLD ROUTES (deprecated) ====================
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
+// POST /users (Tạo user mới - không dùng nữa, dùng /api/auth/signup)
+router.post('/users', userController.createUser);
 
-// PUT update user
-// Cập nhật user theo ID
-router.put('/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    // Kiểm tra user tồn tại
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy user' });
-    }
-
-    // Cập nhật thông tin nếu có trong body
-    if (req.body.name) user.name = req.body.name;
-    if (req.body.email) user.email = req.body.email;
-    if (req.body.password) user.password = req.body.password; // nếu muốn hỗ trợ đổi mật khẩu
-
-    const updatedUser = await user.save();
-    res.json(updatedUser);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: 'Lỗi khi cập nhật user' });
-  }
-});
-
-// DELETE user
-// Xóa user theo ID
-router.delete('/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    // Kiểm tra user tồn tại hay không
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy user' });
-    }
-
-    // Xóa user
-    await User.deleteOne({ _id: userId });
-
-    res.json({ message: 'Đã xóa user thành công' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-});
-
-// Sign Up
-router.post('/signup', async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-
-        // Kiểm tra email trùng
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: 'Email đã tồn tại' });
-
-        // Mã hóa mật khẩu
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const newUser = new User({ name, email, password: hashedPassword });
-        await newUser.save();
-
-        res.status(201).json({ message: 'Đăng ký thành công' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-router.post('/logout', (req, res) => {
-    // Logout thực chất là xóa token phía client
-    res.json({ message: 'Đăng xuất thành công' });
-});
+// PUT /users/:id (Sửa user - không dùng nữa, dùng /api/auth/profile)
+router.put('/users/:id', userController.updateUser);
 
 module.exports = router;
