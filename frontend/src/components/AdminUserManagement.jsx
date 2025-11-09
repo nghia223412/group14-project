@@ -13,7 +13,7 @@ function AdminUserManagement({ token, currentUser }) {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const fetchUsers = async () => {
     setLoading(true);
