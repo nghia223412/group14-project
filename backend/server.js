@@ -15,8 +15,8 @@ mongoose.connect(MONGODB_URI)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Import routes
-const userRoutes = require('./routes/user.js');
-const authRoutes = require('./routes/auth.js');
+const userRoutes = require('./routes/user');
+const authRoutes = require('./routes/auth');
 
 // Temporary admin setup route (chỉ dùng lần đầu)
 const User = require('./models/User.js');
