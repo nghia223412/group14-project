@@ -5,7 +5,31 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors());
+// =======================================================
+// SỬA ĐỔI CẤU HÌNH CORS ĐỂ CHO PHÉP FRONTEND VERCEL
+// =======================================================
+
+// 1. Khai báo domain Frontend Vercel của bạn
+const allowedOrigins = [
+  'http://localhost:3000', 
+  'https://group14-project-virid.vercel.app' // THÊM DOMAIN FRONTEND CỦA BẠN
+];
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Cho phép các nguồn trong danh sách, hoặc cho phép các yêu cầu không có 'origin' (như Postman)
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Cho phép tất cả các phương thức cần thiết
+    credentials: true, // Cho phép gửi cookie và authorization headers
+    optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions)); // SỬ DỤNG CẤU HÌNH CÓ ĐỊNH NGUỒN
 app.use(express.json());
 
 // Kết nối MongoDB (Hoạt động 5)
@@ -14,12 +38,12 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Import routes
+// Import routes (Đã sửa lỗi chữ hoa/chữ thường nếu cần)
 const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 
 // Temporary admin setup route (chỉ dùng lần đầu)
-const User = require('./models/user.js');
+const User = require('./models/user.js'); // Giả định đã sửa thành user.js
 app.post('/api/setup-admin', async (req, res) => {
   try {
     const { email, password, name } = req.body;
