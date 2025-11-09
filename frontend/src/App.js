@@ -1,5 +1,5 @@
-// Nội dung file: frontend/src/App.js (Đã sửa lỗi biên dịch)
-import React, { useState, useEffect, useCallback } from 'react'; // THÊM useCallback
+// Nội dung file: frontend/src/App.js (Đã sửa lỗi no-undef và no-unused-vars)
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Auth from './components/Auth';
 import Profile from './components/Profile';
@@ -14,46 +14,14 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [currentPage, setCurrentPage] = useState('home'); // home, profile, admin
   
-  // SỬA LỖI no-unused-vars (Dòng 17, 22)
-  //const [_users, setUsers] = useState([]); // Đổi tên để bỏ qua cảnh báo
-  //const [name, setName] = useState('');
-  //const [email, setEmail] = useState('');
-  //const [password, setPassword] = useState('');
-  //const [editingUser, setEditingUser] = useState(null);
-  //const [_error, setError] = useState(''); // Đổi tên để bỏ qua cảnh báo
+  // XÓA: Tất cả các state không dùng trong App.js (users, name, email, password, editingUser, error)
+  // Logic và state liên quan đến CRUD đã được chuyển sang AdminUserManagement.jsx
 
-  // 1. Hàm gọi API để lấy danh sách user (Định nghĩa bằng useCallback)
-  const fetchUsers = useCallback(async () => {
-    if (!token) {
-      console.log('No token, cannot fetch users');
-      return;
-    }
+  // Hàm fetchUsers (Giữ lại để truyền xuống Admin, nhưng phải được làm đơn giản nhất)
+  // Tuy nhiên, để tránh lỗi no-undef, ta sẽ định nghĩa lại hàm này trong AdminUserManagement.jsx
+  // và chỉ truyền nó xuống AdminUserManagement nếu cần (hoặc nếu AdminUserManagement có thể tự gọi)
 
-    try {
-      const response = await axios.get(`${API_URL}/users`, {
-        headers: {  
-          Authorization: `Bearer ${token}` 
-        }
-      });
-      
-      console.log('Fetch users response:', response.data);
-      
-      if (response.data.success && response.data.data && response.data.data.users) {
-        setUsers(response.data.data.users);
-      } else {
-        setUsers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error.response?.data || error.message);
-      
-      if (error.response?.status === 403) {
-        // setError('Bạn cần quyền Admin để xem danh sách users'); 
-      }
-      setUsers([]);
-    }
-  }, [token]); // Dependency: Chỉ cần thay đổi khi token thay đổi
-
-  // 2. Hàm kiểm tra xác thực (Định nghĩa bằng useCallback)
+  // 1. Hàm kiểm tra xác thực (Định nghĩa bằng useCallback)
   const checkAuth = useCallback(async () => {
     try {
       console.log('🔍 Checking authentication...');
@@ -63,7 +31,7 @@ function App() {
       console.log('✅ Auth valid - User:', response.data.data.name);
       setCurrentUser(response.data.data);
       setIsLoggedIn(true);
-      fetchUsers();
+      // XÓA: fetchUsers() ở đây để tránh lỗi no-undef
     } catch (error) {
       console.log('⚠️ Auth check failed - Clearing old token');
       localStorage.removeItem('token');
@@ -71,7 +39,7 @@ function App() {
       setIsLoggedIn(false);
       setCurrentUser(null);
     }
-  }, [token, fetchUsers]); // Dependency: Cần token và fetchUsers
+  }, [token]); // Dependency: Chỉ cần token
 
   // Axios interceptor: Tự động xóa token khi gặp lỗi 401
   useEffect(() => {
@@ -97,12 +65,12 @@ function App() {
     };
   }, [isLoggedIn]);
 
-  // Check authentication on mount (SỬA LỖI Dòng 53: exhaustive-deps)
+  // Check authentication on mount (Đã sửa lỗi Dòng 53)
   useEffect(() => {
     if (token) {
       checkAuth();
     }
-  }, [checkAuth, token]); // ✅ Đã thêm checkAuth và token
+  }, [checkAuth, token]); // ✅ Đã sửa lỗi missing dependencies
 
   const handleLoginSuccess = (user, userToken) => {
     console.log('🔐 Login success - Saving token to localStorage');
@@ -110,7 +78,7 @@ function App() {
     setCurrentUser(user);
     setToken(userToken);
     setIsLoggedIn(true);
-    fetchUsers();
+    // XÓA: fetchUsers() ở đây
   };
 
   const handleLogout = () => {
@@ -118,7 +86,7 @@ function App() {
     setToken('');
     setIsLoggedIn(false);
     setCurrentUser(null);
-    setUsers([]);
+    // XÓA: setUsers([]);
     setCurrentPage('home');
   };
 
@@ -126,19 +94,9 @@ function App() {
     setCurrentUser(updatedUser);
   };
 
-  // ❗ XÓA CÁC HÀM KHÔNG SỬ DỤNG (no-unused-vars) - Từ dòng 131 đến 200
-  // Nếu các hàm này được dùng trong AdminUserManagement.jsx, logic của nó đã được chuyển vào component đó.
-  // Nếu bạn cần sử dụng chúng, bạn phải truyền chúng xuống component con.
-  
-  //const resetForm = () => {
-  //  setName('');
-  //  setEmail('');
-  //  setPassword('');
-  //  setEditingUser(null);
-  //  setError('');
-  //};
+  // XÓA: Tất cả các hàm CRUD không sử dụng (fetchUsers, handleSubmit, handleDelete, handleEdit, resetForm)
+  // Vì chúng là nguyên nhân gây ra lỗi no-undef.
 
-  // JSX vẫn giữ nguyên
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       {!isLoggedIn ? (
@@ -315,8 +273,7 @@ function App() {
               <AdminUserManagement 
                 token={token}
                 currentUser={currentUser}
-                // Bạn cần truyền các hàm CRUD nếu component này cần chúng
-                fetchUsers={fetchUsers}
+                // AdminUserManagement hiện tại tự fetch dữ liệu
               />
             )}
           </div>
