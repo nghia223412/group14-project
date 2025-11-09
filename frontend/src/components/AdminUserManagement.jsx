@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'; // THÊM useCallback
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://group14-project-a92d.onrender.com/api';
 
 function AdminUserManagement({ token, currentUser }) {
   const [users, setUsers] = useState([]);
