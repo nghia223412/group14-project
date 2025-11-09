@@ -9,8 +9,7 @@ const app = express();
 // CẤU HÌNH MIDDLEWARE
 // =======================================================
 
-// 1. Body Parser: Phải chạy trước hầu hết các middleware, đặc biệt là CORS,
-// để đảm bảo Express có thể đọc được Body (req.body) nếu cần.
+// 1. Body Parser: Phải chạy trước CORS và các route khác.
 app.use(express.json());
 
 
@@ -18,18 +17,16 @@ app.use(express.json());
 // Khai báo domain Frontend Vercel của bạn
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://group14-project-virid.vercel.app', // Frontend Production URL
-    'https://group14-project-virid2.vercel.app'
+    'https://group14-project-virid.vercel.app',   // URL cũ
+    'https://group14-project-virid2.vercel.app'  // ✨ URL MỚI CỦA BẠN ✨
 ];
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Cho phép các nguồn trong danh sách (production/local)
-        // hoặc cho phép các yêu cầu không có 'origin' (như Postman/Server-to-Server)
+        // Cho phép các nguồn trong danh sách, hoặc cho phép các yêu cầu không có 'origin'
         if (allowedOrigins.includes(origin) || !origin) {
             callback(null, true);
         } else {
-            // Log chi tiết hơn nếu có lỗi CORS
             console.error('CORS blocked origin:', origin);
             callback(new Error(`Not allowed by CORS policy: ${origin}`));
         }
@@ -39,13 +36,8 @@ const corsOptions = {
     optionsSuccessStatus: 204 // Mã phản hồi cho yêu cầu OPTIONS thành công
 };
 
-// Áp dụng CORS middleware
-app.use(cors({
-    origin: 'https://group14-project-virid.vercel.app', // Chỉ cho phép domain frontend
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-    optionsSuccessStatus: 204
-}));
+// Áp dụng CORS middleware: SỬ DỤNG ĐÚNG biến 'corsOptions' đã cấu hình chi tiết
+app.use(cors(corsOptions)); 
 
 
 // =======================================================
@@ -77,7 +69,6 @@ app.use('/api/auth', authRoutes);    // Mount auth routes
 // TEMPORARY ADMIN SETUP ROUTE
 // =======================================================
 
-// Đây là route chỉ nên chạy một lần để tạo tài khoản admin ban đầu
 app.post('/api/setup-admin', async (req, res) => {
     try {
         const { email, password, name } = req.body;
@@ -119,5 +110,5 @@ app.post('/api/setup-admin', async (req, res) => {
 // KHỞI ĐỘNG SERVER
 // =======================================================
 
-const PORT = process.env.PORT || 5000; // Thay đổi cổng mặc định thành 5000 là phổ biến hơn
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
