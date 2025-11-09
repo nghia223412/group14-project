@@ -6,7 +6,7 @@ import Profile from './components/Profile';
 import AdminUserManagement from './components/AdminUserManagement';
 
 // URL của Backend (sử dụng environment variable)
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://group14-project-a92d.onrender.com/api';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
